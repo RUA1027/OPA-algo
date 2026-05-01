@@ -1,0 +1,2 @@
+point_index,method,input_wavelength_nm,matched_wavelength_nm,delta_lambda_nm,letter,letter_index,point_id,x_pixel,y_pixel,image_path,result_path,best_intensity,final_intensity,eval_count,elapsed_sec,status,error_message
+1,5pps,1557.1,1557.1,7.123,U,9,U9,218,158,E:\2026光赛\vision0418\calibration_outputs\20260418_152426_lambda_1557p1nm\point_01_U9_x218_y158_best_image.tif,E:\2026光赛\vision0418\calibration_outputs\20260418_152426_lambda_1557p1nm\point_01_U9_x218_y158_result.mat,3985,424899,1793,328.8767962,completed,

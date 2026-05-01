@@ -1,0 +1,2 @@
+point_index,method,input_wavelength_nm,matched_wavelength_nm,delta_lambda_nm,letter,letter_index,point_id,x_pixel,y_pixel,image_path,result_path,best_intensity,final_intensity,eval_count,elapsed_sec,status,error_message
+1,mREV,1561.781,1561.781,11.781,S,2,S2,160,175,E:\2026光赛\对比试验\vision0419\calibration_outputs\20260420_143855_lambda_1561p781nm\point_01_S2_x160_y175_best_image.tif,E:\2026光赛\对比试验\vision0419\calibration_outputs\20260420_143855_lambda_1561p781nm\point_01_S2_x160_y175_result.mat,11227,640031,76159,6070.1224748,completed,
