@@ -5,7 +5,7 @@ function result = exp_quickstart(method, wavelengthNm, varargin)
 %   result = exp_quickstart("mREV-GSS");
 %   result = exp_quickstart("5PPS");
 %   result = exp_quickstart("PFPD");
-%   result = exp_quickstart("CAIO");
+%   result = exp_quickstart("mREV");
 %   result = exp_quickstart("mREV-GSS", 1550);
 %   result = exp_quickstart("5pps", 1534.658); 在命令行窗口就这样输入即可快速启动实验。
 

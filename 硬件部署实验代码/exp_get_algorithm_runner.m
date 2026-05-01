@@ -17,14 +17,14 @@ token = iNormalizeMethodToken(method);
 % 统一分发入口：返回对应算法运行器函数句柄。
 % 后续由 exp_run_calibration 调用该句柄执行具体算法。
 switch token
+    case "MREV"
+        runner = @exp_run_mrev;
     case "MREVGSS"
         runner = @exp_run_mrevgss;
     case {"5PPS", "FIVEPPS"}
         runner = @exp_run_5pps;
     case "PFPD"
         runner = @exp_run_pfpd;
-    case "CAIO"
-        runner = @exp_run_caio;
     otherwise
         error("opa_exp:exp_get_algorithm_runner:UnsupportedMethod", "Unsupported method: %s", method);
 end

@@ -11,7 +11,7 @@ cfg = struct();
 
 % ---------------------- 算法方法选择 ----------------------
 cfg.method = "5PPS"; 
-% "mREV-GSS" | "5PPS" | "PFPD" | "CAIO"
+% "mREV" | "mREV-GSS" | "5PPS" | "PFPD"
 
 % ---------------------- 全局控制参数（U 域） ----------------------
 cfg.numChannels = 64;
@@ -85,6 +85,14 @@ cfg.hardware.capture.sampleRateNs = 1000;
 cfg.hardware.capture.openChannels = 1;
 cfg.hardware.capture.sampleRange = 1.28;
 
+% ---------------------- mREV 配置（纯网格搜索）----------------------
+cfg.mrev = struct();
+cfg.mrev.maxRounds = 4;
+cfg.mrev.kByRound = [7, 8, 10, 12];
+cfg.mrev.shrinkRatio = (sqrt(5) - 1) / 2;
+cfg.mrev.controlMin = cfg.controlMin;
+cfg.mrev.controlMax = cfg.controlMax;
+
 % ---------------------- mREV-GSS 配置 ----------------------
 cfg.mrevGss = struct();
 cfg.mrevGss.maxRounds = 4;
@@ -106,13 +114,6 @@ cfg.pfpd.numFitSamples = 14;
 cfg.pfpd.fitGridPoints = 201;
 cfg.pfpd.controlMin = cfg.controlMin;
 cfg.pfpd.controlMax = cfg.controlMax;
-
-% ---------------------- CAIO 配置 ----------------------
-cfg.caio = struct();
-cfg.caio.maxRounds = 2;
-cfg.caio.ppsSteps = 5; % valid values: 3 | 4 | 5
-cfg.caio.controlMin = cfg.controlMin;
-cfg.caio.controlMax = cfg.controlMax;
 
 % ---------------------- 运行时注入 ----------------------
 % mockMeasureFn 非空时，exp_run_calibration 将跳过硬件初始化，直接调用该测量函数。

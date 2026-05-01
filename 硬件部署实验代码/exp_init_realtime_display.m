@@ -20,6 +20,9 @@ displayState.bestImage = [];
 displayState.bestControlU = [];
 displayState.bestRoundIdx = NaN;
 displayState.bestChannelIdx = NaN;
+displayState.bestPhaseFwhmDeg = NaN;
+displayState.bestWlFwhmDeg = NaN;
+displayState.bestBeamPositionDeg = NaN;
 displayState.imageClim = [0, displayState.saturationThreshold];
 
 end

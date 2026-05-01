@@ -186,6 +186,15 @@ if isfield(result, "best_image") && ~isempty(result.best_image)
 elseif isfield(result, "V_measure_final") && ~isempty(result.V_measure_final)
     summary.bestIntensity = double(max(result.V_measure_final));
 end
+if isfield(result, "bestPhaseFwhmDeg") && ~isempty(result.bestPhaseFwhmDeg)
+    summary.bestPhaseFwhmDeg = double(result.bestPhaseFwhmDeg);
+end
+if isfield(result, "bestWlFwhmDeg") && ~isempty(result.bestWlFwhmDeg)
+    summary.bestWlFwhmDeg = double(result.bestWlFwhmDeg);
+end
+if isfield(result, "bestBeamPositionDeg") && ~isempty(result.bestBeamPositionDeg)
+    summary.bestBeamPositionDeg = double(result.bestBeamPositionDeg);
+end
 end
 
 function summary = iEmptyResultSummary()
@@ -194,6 +203,9 @@ summary.evalCount = NaN;
 summary.elapsedSec = NaN;
 summary.finalIntensity = NaN;
 summary.bestIntensity = NaN;
+summary.bestPhaseFwhmDeg = NaN;
+summary.bestWlFwhmDeg = NaN;
+summary.bestBeamPositionDeg = NaN;
 end
 
 function record = iManifestRecordTemplate()
@@ -212,6 +224,9 @@ record.image_path = "";
 record.result_path = "";
 record.best_intensity = NaN;
 record.final_intensity = NaN;
+record.best_phase_fwhm_deg = NaN;
+record.best_wl_fwhm_deg = NaN;
+record.best_beam_position_deg = NaN;
 record.eval_count = NaN;
 record.elapsed_sec = NaN;
 record.status = "";
@@ -237,6 +252,9 @@ record.best_intensity = resultSummary.bestIntensity;
 record.final_intensity = resultSummary.finalIntensity;
 record.eval_count = resultSummary.evalCount;
 record.elapsed_sec = resultSummary.elapsedSec;
+record.best_phase_fwhm_deg = resultSummary.bestPhaseFwhmDeg;
+record.best_wl_fwhm_deg = resultSummary.bestWlFwhmDeg;
+record.best_beam_position_deg = resultSummary.bestBeamPositionDeg;
 record.status = string(status);
 record.error_message = string(errorMessage);
 end

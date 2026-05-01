@@ -13,15 +13,13 @@ state = initSimulationState(cfg);
 
 % Channel schedule (shared across channel-sequential algorithms)
 maxRounds = max([cfg.mrev.maxRounds, cfg.mrevGss.maxRounds, cfg.pfpd.rounds, ...
-                 cfg.fivePps.maxRounds, cfg.hybrid.pps.maxRounds, cfg.caio.maxRounds]);
+                 cfg.fivePps.maxRounds]);
 schedule = makeChannelSchedule(cfg.channelOrder, state.numChannels, maxRounds, cfg.general.seed);
 
 cfg.mrev.channelSchedule    = schedule(1:cfg.mrev.maxRounds, :);
 cfg.mrevGss.channelSchedule = schedule(1:cfg.mrevGss.maxRounds, :);
 cfg.pfpd.channelSchedule    = schedule(1:cfg.pfpd.rounds, :);
 cfg.fivePps.channelSchedule = schedule(1:cfg.fivePps.maxRounds, :);
-cfg.hybrid.pps.channelSchedule = schedule(1:cfg.hybrid.pps.maxRounds, :);
-cfg.caio.channelSchedule    = schedule(1:cfg.caio.maxRounds, :);
 
 %%计算未标定时的远场光场
 initialControlU = state.initialControlU;
@@ -34,9 +32,6 @@ measureFnMrev    = makeMeasureFunction(state, cfg, cfg.general.seed);
 measureFnMrevGss = makeMeasureFunction(state, cfg, cfg.general.seed);
 measureFnPfpd    = makeMeasureFunction(state, cfg, cfg.general.seed);
 measureFn5pps    = makeMeasureFunction(state, cfg, cfg.general.seed);
-measureFnSpsa    = makeMeasureFunction(state, cfg, cfg.general.seed);
-measureFnHybrid  = makeMeasureFunction(state, cfg, cfg.general.seed);
-measureFnCaio    = makeMeasureFunction(state, cfg, cfg.general.seed);
 
 % --- Run existing 3 algorithms ---
 tStart = tic;
@@ -51,31 +46,16 @@ tStart = tic;
 pfpd = runPfpd(state, cfg.pfpd, measureFnPfpd);
 pfpd.runtimeSec = toc(tStart);
 
-% --- Run 4 new algorithms ---
+% --- Run 4th algorithm ---
 tStart = tic;
 fivePps = run5pps(state, cfg.fivePps, measureFn5pps);
 fivePps.runtimeSec = toc(tStart);
-
-tStart = tic;
-spsa = runSpsa(state, cfg.spsa, measureFnSpsa);
-spsa.runtimeSec = toc(tStart);
-
-tStart = tic;
-hybrid = runHybridSpsaPps(state, cfg.hybrid, measureFnHybrid);
-hybrid.runtimeSec = toc(tStart);
-
-tStart = tic;
-caio = runCaio(state, cfg.caio, measureFnCaio);
-caio.runtimeSec = toc(tStart);
 
 % Attach far-field and metrics
 mrev    = iAttachFieldAndMetrics(mrev, state, thetaDeg);
 mrevGss = iAttachFieldAndMetrics(mrevGss, state, thetaDeg);
 pfpd    = iAttachFieldAndMetrics(pfpd, state, thetaDeg);
 fivePps = iAttachFieldAndMetrics(fivePps, state, thetaDeg);
-spsa    = iAttachFieldAndMetrics(spsa, state, thetaDeg);
-hybrid  = iAttachFieldAndMetrics(hybrid, state, thetaDeg);
-caio    = iAttachFieldAndMetrics(caio, state, thetaDeg);
 
 compareResult = struct();
 compareResult.cfg   = cfg;
@@ -92,9 +72,6 @@ compareResult.mrev    = mrev;
 compareResult.mrevGss = mrevGss;
 compareResult.pfpd    = pfpd;
 compareResult.fivePps = fivePps;
-compareResult.spsa    = spsa;
-compareResult.hybrid  = hybrid;
-compareResult.caio    = caio;
 
 shouldPrintSummary = true;
 if isfield(cfg, "output") && isfield(cfg.output, "printSummary")
@@ -136,9 +113,6 @@ iPrintOneMethod(result.mrev, initialTarget);
 iPrintOneMethod(result.mrevGss, initialTarget);
 iPrintOneMethod(result.pfpd, initialTarget);
 iPrintOneMethod(result.fivePps, initialTarget);
-iPrintOneMethod(result.spsa, initialTarget);
-iPrintOneMethod(result.hybrid, initialTarget);
-iPrintOneMethod(result.caio, initialTarget);
 
 end
 
@@ -159,11 +133,11 @@ dbFloor = cfg.plot.dbFloor;
 theta = result.state.thetaGridDeg;
 
 % Method list for iteration
-methods = {"mrev", "mrevGss", "pfpd", "fivePps", "spsa", "hybrid", "caio"};
-labels  = {"mREV", "mREV-GSS", "PFPD", "5PPS", "SPSA", "Hybrid-SPSA-PPS", "CAIO"};
+methods = {"mrev", "mrevGss", "pfpd", "fivePps"};
+labels  = {"mREV", "mREV-GSS", "PFPD", "5PPS"};
 colors  = {[0.10,0.60,0.20], [0.10,0.35,0.80], [0.85,0.20,0.20], ...
-           [0.80,0.50,0.00], [0.55,0.00,0.80], [0.00,0.70,0.70], [0.90,0.10,0.60]};
-markers = {'o', '^', 's', 'd', 'v', 'p', 'h'};
+           [0.80,0.50,0.00]};
+markers = {'o', '^', 's', 'd'};
 
 %% Figure 1: Far-field intensity (linear + dB)
 figure("Name", "OPA Far-field Comparison", "Color", "w");

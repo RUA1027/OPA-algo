@@ -53,6 +53,9 @@ if displayState.isCcd && isfield(sensorInfo, "image") && ~isempty(sensorInfo.ima
 
         [phaseFwhm, wlFwhm] = func_extract_FWHM(displayState.bestImage);
         wlPosition = func_locate_wl_position(displayState.bestImage);
+        displayState.bestPhaseFwhmDeg = phaseFwhm;
+        displayState.bestWlFwhmDeg = wlFwhm;
+        displayState.bestBeamPositionDeg = wlPosition;
         bestImageClim = iMakeDynamicImageClim(displayState.bestImage);
 
         subplot(1, 3, 3);

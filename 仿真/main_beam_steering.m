@@ -1,6 +1,6 @@
 function steeringResult = main_beam_steering(cfg)
 %MAIN_BEAM_STEERING Simulate OPA beam steering from 0 to 60 degrees.
-% Evaluate SMSR and main-lobe power ratio across scanning angles for all 7 algorithms.
+% Evaluate SMSR and main-lobe power ratio across scanning angles for all 4 algorithms.
 %
 % Usage:
 %   main_beam_steering
@@ -24,8 +24,8 @@ scanAngles = scanCfg.startThetaDeg:scanCfg.stepThetaDeg:scanCfg.endThetaDeg;
 numAngles = numel(scanAngles);
 
 % Method keys and display labels
-methodKeys = {"mrev", "mrevGss", "pfpd", "fivePps", "spsa", "hybrid", "caio"};
-methodLabels = {"mREV", "mREV-GSS", "PFPD", "5PPS", "SPSA", "Hybrid-SPSA-PPS", "CAIO"};
+methodKeys = {"mrev", "mrevGss", "pfpd", "fivePps"};
+methodLabels = {"mREV", "mREV-GSS", "PFPD", "5PPS"};
 numMethods = numel(methodKeys);
 
 % Pre-allocate
@@ -64,8 +64,8 @@ end
 
 % Colours for plotting
 colors = {[0.10,0.60,0.20], [0.10,0.35,0.80], [0.85,0.20,0.20], ...
-          [0.80,0.50,0.00], [0.55,0.00,0.80], [0.00,0.70,0.70], [0.90,0.10,0.60]};
-markers = {'-o', '-^', '-s', '-d', '-v', '-p', '-h'};
+          [0.80,0.50,0.00]};
+markers = {'-o', '-^', '-s', '-d'};
 
 if scanCfg.showFigures
     figure("Name", "Beam Steering Performance", "Color", "w", "Position", [100, 100, 1080, 440]);
@@ -134,14 +134,14 @@ if scanCfg.exportMat || scanCfg.exportCsv
         csvPath = fullfile(scanCfg.exportDir, [fileStem, '.csv']);
         T = table(scanAngles(:), ...
             smsrAll(1,:).', smsrAll(2,:).', smsrAll(3,:).', ...
-            smsrAll(4,:).', smsrAll(5,:).', smsrAll(6,:).', smsrAll(7,:).', ...
+            smsrAll(4,:).', ...
             powerRatioAll(1,:).', powerRatioAll(2,:).', powerRatioAll(3,:).', ...
-            powerRatioAll(4,:).', powerRatioAll(5,:).', powerRatioAll(6,:).', powerRatioAll(7,:).', ...
+            powerRatioAll(4,:).', ...
             'VariableNames', {'angleDeg', ...
             'smsr_mrev_db', 'smsr_mrevGss_db', 'smsr_pfpd_db', ...
-            'smsr_5pps_db', 'smsr_spsa_db', 'smsr_hybrid_db', 'smsr_caio_db', ...
+            'smsr_5pps_db', ...
             'mainLobeRatio_mrev', 'mainLobeRatio_mrevGss', 'mainLobeRatio_pfpd', ...
-            'mainLobeRatio_5pps', 'mainLobeRatio_spsa', 'mainLobeRatio_hybrid', 'mainLobeRatio_caio'});
+            'mainLobeRatio_5pps'});
         writetable(T, csvPath);
         exportInfo.csvPath = csvPath;
     end

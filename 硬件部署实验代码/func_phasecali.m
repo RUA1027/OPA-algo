@@ -10,7 +10,7 @@ function [cal_result, result] = func_phasecali(s, v, cfg)
 %   s   optional external serialport object for voltage source
 %   v   optional external video object for CCD mode
 %   cfg optional struct from exp_default_config()
-%       cfg.method supports: "mREV-GSS" | "5PPS" | "PFPD" | "CAIO"
+%       cfg.method supports: "mREV" | "mREV-GSS" | "5PPS" | "PFPD"
 %
 % Output:
 %   cal_result voltage-domain calibration vector (V) for 128 active channels

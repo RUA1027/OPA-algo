@@ -85,14 +85,14 @@ function cfgMethod = iSelectMethodCfg(cfg)
 token = iNormalizeMethodToken(cfg.method);
 
 switch token
+    case "MREV"
+        cfgMethod = cfg.mrev;
     case "MREVGSS"
         cfgMethod = cfg.mrevGss;
     case {"5PPS", "FIVEPPS"}
         cfgMethod = cfg.fivePps;
     case "PFPD"
         cfgMethod = cfg.pfpd;
-    case "CAIO"
-        cfgMethod = cfg.caio;
     otherwise
         error("opa_exp:exp_run_calibration:UnsupportedMethod", "Unsupported method: %s", cfg.method);
 end
@@ -103,14 +103,14 @@ function rounds = iMethodRounds(method, cfgMethod)
 token = iNormalizeMethodToken(method);
 
 switch token
+    case "MREV"
+        rounds = cfgMethod.maxRounds;
     case "MREVGSS"
         rounds = cfgMethod.maxRounds;
     case {"5PPS", "FIVEPPS"}
         rounds = cfgMethod.maxRounds;
     case "PFPD"
         rounds = cfgMethod.rounds;
-    case "CAIO"
-        rounds = cfgMethod.maxRounds;
     otherwise
         error("opa_exp:exp_run_calibration:UnsupportedMethod", "Unsupported method: %s", method);
 end
