@@ -84,6 +84,8 @@ result.roundEvalCount = roundEvalCount;
 result.fitFailureCount = fitFailureCount;
 result.roundAccepted = roundAccepted;
 
+result = attachSimulationMetrics(result, state);
+
 end
 
 function [uOpt, fitSuccess] = iFitPeakControl(uSamples, ySamples, uMin, uMax, fitGridPoints)

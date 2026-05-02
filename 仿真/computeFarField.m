@@ -16,7 +16,7 @@ phase0 = simCfg.intrinsicPhaseRad + phaseCtrl;
 u = sind(thetaDeg);
 % 远场角度对应的空间频率 u = sin(theta)，单位是无量纲的。
 % 计算远场时，通常使用空间频率 u 来表示不同的观察角度，因为它直接关系到相位差和干涉条件。
-%由此得到几何相位矩阵 phaseGeom，大小为 numChannels x numTheta。
+% 由此得到几何相位矩阵 phaseGeom，大小为 numChannels x numTheta。
 phaseGeom = simCfg.k * (simCfg.xPositionsM.' * u);
 phaseAll = phaseGeom + phase0.';
 

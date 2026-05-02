@@ -52,10 +52,16 @@ if displayState.isCcd && isfield(sensorInfo, "image") && ~isempty(sensorInfo.ima
     if isequal(displayState.bestControlU, controlU)
 
         [phaseFwhm, wlFwhm] = func_extract_FWHM(displayState.bestImage);
-        wlPosition = func_locate_wl_position(displayState.bestImage);
+        peak = func_locate_peak(displayState.bestImage);
         displayState.bestPhaseFwhmDeg = phaseFwhm;
         displayState.bestWlFwhmDeg = wlFwhm;
-        displayState.bestBeamPositionDeg = wlPosition;
+        displayState.bestPeak = peak;
+        displayState.bestPeakXPixel = peak.x_pixel;
+        displayState.bestPeakYPixel = peak.y_pixel;
+        displayState.bestPeakXDeg = peak.x_deg;
+        displayState.bestPeakYDeg = peak.y_deg;
+        displayState.bestBeamPositionDeg = peak.y_deg;
+        displayState = iUpdateTargetDeviation(displayState);
         bestImageClim = iMakeDynamicImageClim(displayState.bestImage);
 
         subplot(1, 3, 3);
@@ -67,7 +73,8 @@ if displayState.isCcd && isfield(sensorInfo, "image") && ~isempty(sensorInfo.ima
         colormap('gray');
         title(['Best Image', newline, ...
                'FWHM = ', num2str(phaseFwhm), char(176), char(215), num2str(wlFwhm), char(176), newline, ...
-               'Beam Position: ', num2str(wlPosition), char(176), newline, ...
+               'Peak = (', num2str(peak.x_pixel), ', ', num2str(peak.y_pixel), ') px', newline, ...
+               'Target Error = ', num2str(displayState.bestTargetDeviationRssPixel), ' px', newline, ...
                'Best @ Round ', num2str(displayState.bestRoundIdx), ...
                ', Ch ', num2str(displayState.bestChannelIdx)]);
     end
@@ -114,4 +121,22 @@ if maxValue <= 0
     maxValue = 1;
 end
 imageClim = [0, maxValue];
+end
+
+function displayState = iUpdateTargetDeviation(displayState)
+pixelAngle = 11 / 256;
+
+if ~isfinite(displayState.targetXPixel) || ~isfinite(displayState.targetYPixel) || ...
+        ~isfinite(displayState.bestPeakXPixel) || ~isfinite(displayState.bestPeakYPixel)
+    return;
+end
+
+dxPx = displayState.bestPeakXPixel - displayState.targetXPixel;
+dyPx = displayState.bestPeakYPixel - displayState.targetYPixel;
+displayState.bestTargetDeviationXPixel = dxPx;
+displayState.bestTargetDeviationYPixel = dyPx;
+displayState.bestTargetDeviationRssPixel = round(hypot(dxPx, dyPx), 3);
+displayState.bestTargetDeviationXDeg = round(dxPx * pixelAngle, 3);
+displayState.bestTargetDeviationYDeg = round(dyPx * pixelAngle, 3);
+displayState.bestTargetDeviationRssDeg = round(displayState.bestTargetDeviationRssPixel * pixelAngle, 3);
 end

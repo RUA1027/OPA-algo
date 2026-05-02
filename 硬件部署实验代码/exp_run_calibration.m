@@ -124,6 +124,8 @@ displayCfg.enabled = true;
 displayCfg.figureNumber = 1;
 displayCfg.saturationThreshold = 16000;
 displayCfg.figureName = "Calibration Realtime Monitor";
+displayCfg.targetXPixel = NaN;
+displayCfg.targetYPixel = NaN;
 
 if isfield(cfg, "measure") && isfield(cfg.measure, "ccdRealtimeDisplay")
     rawCfg = cfg.measure.ccdRealtimeDisplay;
@@ -139,6 +141,12 @@ if isfield(cfg, "measure") && isfield(cfg.measure, "ccdRealtimeDisplay")
     if isfield(rawCfg, "figureName")
         displayCfg.figureName = string(rawCfg.figureName);
     end
+end
+if isfield(cfg, "measure") && isfield(cfg.measure, "ccdCenterCol")
+    displayCfg.targetXPixel = double(cfg.measure.ccdCenterCol);
+end
+if isfield(cfg, "measure") && isfield(cfg.measure, "ccdTargetRow")
+    displayCfg.targetYPixel = double(cfg.measure.ccdTargetRow);
 end
 end
 

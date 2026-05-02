@@ -12,25 +12,22 @@ function peak = func_locate_peak(image)
 %         x_deg,   y_deg    — angular position (deg), based on 11 deg / 256 px
 
 pixel_angle = 11 / 256;
+image = double(image);
 
-[height, width] = size(image);
-max_intensity = max(image(:));
-
-row_index = 0;
-col_index = 0;
-for i = 1:height
-    for j = 1:width
-        if image(i, j) == max_intensity
-            row_index = i;
-            col_index = j;
-        end
-    end
+if isempty(image) || ~ismatrix(image) || all(~isfinite(image(:)))
+    peak = struct("x_pixel", NaN, "y_pixel", NaN, "x_deg", NaN, "y_deg", NaN, "intensity", NaN);
+    return;
 end
+
+image(~isfinite(image)) = -Inf;
+[max_intensity, linearIdx] = max(image(:));
+[row_index, col_index] = ind2sub(size(image), linearIdx);
 
 peak = struct();
 peak.x_pixel = col_index;
 peak.y_pixel = row_index;
 peak.x_deg   = round(col_index * pixel_angle, 3);
 peak.y_deg   = round(row_index * pixel_angle, 3);
+peak.intensity = double(max_intensity);
 
 end

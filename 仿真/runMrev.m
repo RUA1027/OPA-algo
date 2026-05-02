@@ -97,6 +97,8 @@ result.roundGridStep = roundGridStep;
 result.roundEvalCount = roundEvalCount;
 result.roundAccepted = roundAccepted;
 
+result = attachSimulationMetrics(result, state);
+
 end
 
 function [uOpt, evalCount, gridStepUsed] = iGridSearchByChannel(controlU, channelIdx, uMin, uMax, gapTol, measureFn)

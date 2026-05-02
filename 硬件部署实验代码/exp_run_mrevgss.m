@@ -83,13 +83,8 @@ result.roundGapTol = roundGapTol;
 result.roundMaxTerminalGap = roundMaxTerminalGap;
 result.roundEvalCount = roundEvalCount;
 result.roundAccepted = roundAccepted;
-result.bestDisplayControlU = displayState.bestControlU;
-result.V_measure_final = displayState.intensityHistory;
-result.best_image = displayState.bestImage;
+result = exp_attach_display_metrics(result, displayState);
 result.voltage_calibration_best = iControlUToVoltage(displayState.bestControlU);
-result.bestPhaseFwhmDeg = displayState.bestPhaseFwhmDeg;
-result.bestWlFwhmDeg = displayState.bestWlFwhmDeg;
-result.bestBeamPositionDeg = displayState.bestBeamPositionDeg;
 
 end
 

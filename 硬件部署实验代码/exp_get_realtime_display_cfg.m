@@ -11,6 +11,8 @@ displayCfg.sensorMode = "CCD";
 displayCfg.figureNumber = 1;
 displayCfg.saturationThreshold = 16000;
 displayCfg.figureName = "Calibration Realtime Monitor";
+displayCfg.targetXPixel = NaN;
+displayCfg.targetYPixel = NaN;
 
 if isfield(cfgMethod, "realtimeDisplay") && ~isempty(cfgMethod.realtimeDisplay)
     rawCfg = cfgMethod.realtimeDisplay;
@@ -28,6 +30,12 @@ if isfield(cfgMethod, "realtimeDisplay") && ~isempty(cfgMethod.realtimeDisplay)
     end
     if isfield(rawCfg, "figureName")
         displayCfg.figureName = string(rawCfg.figureName);
+    end
+    if isfield(rawCfg, "targetXPixel")
+        displayCfg.targetXPixel = double(rawCfg.targetXPixel);
+    end
+    if isfield(rawCfg, "targetYPixel")
+        displayCfg.targetYPixel = double(rawCfg.targetYPixel);
     end
 end
 

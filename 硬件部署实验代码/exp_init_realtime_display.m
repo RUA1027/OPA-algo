@@ -23,6 +23,19 @@ displayState.bestChannelIdx = NaN;
 displayState.bestPhaseFwhmDeg = NaN;
 displayState.bestWlFwhmDeg = NaN;
 displayState.bestBeamPositionDeg = NaN;
+displayState.bestPeak = struct("x_pixel", NaN, "y_pixel", NaN, "x_deg", NaN, "y_deg", NaN, "intensity", NaN);
+displayState.bestPeakXPixel = NaN;
+displayState.bestPeakYPixel = NaN;
+displayState.bestPeakXDeg = NaN;
+displayState.bestPeakYDeg = NaN;
+displayState.targetXPixel = iResolveOptionalNumber(displayCfg, "targetXPixel", NaN);
+displayState.targetYPixel = iResolveOptionalNumber(displayCfg, "targetYPixel", NaN);
+displayState.bestTargetDeviationXPixel = NaN;
+displayState.bestTargetDeviationYPixel = NaN;
+displayState.bestTargetDeviationRssPixel = NaN;
+displayState.bestTargetDeviationXDeg = NaN;
+displayState.bestTargetDeviationYDeg = NaN;
+displayState.bestTargetDeviationRssDeg = NaN;
 displayState.imageClim = [0, displayState.saturationThreshold];
 
 end
@@ -65,5 +78,12 @@ function figureName = iResolveFigureName(displayCfg)
 figureName = "Calibration Realtime Monitor";
 if isfield(displayCfg, "figureName")
     figureName = string(displayCfg.figureName);
+end
+end
+
+function value = iResolveOptionalNumber(displayCfg, fieldName, defaultValue)
+value = defaultValue;
+if isfield(displayCfg, fieldName)
+    value = double(displayCfg.(fieldName));
 end
 end

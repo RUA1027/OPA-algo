@@ -46,6 +46,7 @@ cfg.measure.sampleTimes = 1;
 cfg.measure.delaySec = 0.03;
 cfg.measure.ccdSpotSize = 4;
 cfg.measure.ccdCenterCol = 160;
+cfg.measure.ccdTargetRow = NaN;
 cfg.measure.ccdRealtimeDisplay = struct();
 cfg.measure.ccdRealtimeDisplay.enabled = true;
 cfg.measure.ccdRealtimeDisplay.figureNumber = 1;

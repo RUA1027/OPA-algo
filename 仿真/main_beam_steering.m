@@ -1,6 +1,6 @@
 function steeringResult = main_beam_steering(cfg)
-%MAIN_BEAM_STEERING Simulate OPA beam steering from 0 to 60 degrees.
-% Evaluate SMSR and main-lobe power ratio across scanning angles for all 4 algorithms.
+%MAIN_BEAM_STEERING Simulate OPA beam steering over the configured angle range.
+% Evaluate SMSR/SLSR, FWHM, pointing error, runtime, and sampling cost.
 %
 % Usage:
 %   main_beam_steering
@@ -24,13 +24,18 @@ scanAngles = scanCfg.startThetaDeg:scanCfg.stepThetaDeg:scanCfg.endThetaDeg;
 numAngles = numel(scanAngles);
 
 % Method keys and display labels
-methodKeys = {"mrev", "mrevGss", "pfpd", "fivePps"};
-methodLabels = {"mREV", "mREV-GSS", "PFPD", "5PPS"};
+methodKeys = {"mrev", "mrevGss", "pfpd", "fivePps", "spgd", "hillClimb"};
+methodLabels = {"mREV", "mREV-GSS", "PFPD", "5PPS", "SPGD", "Hill-Climb"};
 numMethods = numel(methodKeys);
 
 % Pre-allocate
 smsrAll      = zeros(numMethods, numAngles);
 powerRatioAll = zeros(numMethods, numAngles);
+fwhmAll = zeros(numMethods, numAngles);
+pointingErrorAll = zeros(numMethods, numAngles);
+evalCountAll = zeros(numMethods, numAngles);
+runtimeAll = zeros(numMethods, numAngles);
+targetIntensityAll = zeros(numMethods, numAngles);
 
 if scanCfg.verbose
     fprintf("=== Start OPA beam steering simulation (%.1f deg -> %.1f deg, step %.1f deg) ===\n", ...
@@ -48,6 +53,9 @@ for idx = 1:numAngles
     runCfg.sim.targetThetaDeg = currentAngle;
     runCfg.plot.showFigures = false;
     runCfg.output.printSummary = false;
+    runCfg.output.exportMat = false;
+    runCfg.output.exportCsv = false;
+    runCfg.output.exportFigures = false;
 
     result = main_compare_calibration(runCfg);
 
@@ -55,6 +63,11 @@ for idx = 1:numAngles
         r = result.(methodKeys{m});
         smsrAll(m, idx)       = r.metrics.smsrDb;
         powerRatioAll(m, idx) = r.metrics.mainLobePowerRatio;
+        fwhmAll(m, idx) = r.metrics.fwhmDeg;
+        pointingErrorAll(m, idx) = r.metrics.pointingErrorDeg;
+        evalCountAll(m, idx) = r.evalCount;
+        runtimeAll(m, idx) = r.runtimeSec;
+        targetIntensityAll(m, idx) = r.targetIntensity;
     end
 end
 
@@ -64,8 +77,8 @@ end
 
 % Colours for plotting
 colors = {[0.10,0.60,0.20], [0.10,0.35,0.80], [0.85,0.20,0.20], ...
-          [0.80,0.50,0.00]};
-markers = {'-o', '-^', '-s', '-d'};
+          [0.80,0.50,0.00], [0.55,0.00,0.80], [0.00,0.70,0.70]};
+markers = {'-o', '-^', '-s', '-d', '-v', '-p'};
 
 if scanCfg.showFigures
     figure("Name", "Beam Steering Performance", "Color", "w", "Position", [100, 100, 1080, 440]);
@@ -106,12 +119,27 @@ steeringResult.angles = scanAngles;
 
 smsrStruct = struct();
 powerRatioStruct = struct();
+fwhmStruct = struct();
+pointingErrorStruct = struct();
+evalCountStruct = struct();
+runtimeStruct = struct();
+targetIntensityStruct = struct();
 for m = 1:numMethods
     smsrStruct.(methodKeys{m})       = smsrAll(m, :);
     powerRatioStruct.(methodKeys{m}) = powerRatioAll(m, :);
+    fwhmStruct.(methodKeys{m}) = fwhmAll(m, :);
+    pointingErrorStruct.(methodKeys{m}) = pointingErrorAll(m, :);
+    evalCountStruct.(methodKeys{m}) = evalCountAll(m, :);
+    runtimeStruct.(methodKeys{m}) = runtimeAll(m, :);
+    targetIntensityStruct.(methodKeys{m}) = targetIntensityAll(m, :);
 end
 steeringResult.smsr       = smsrStruct;
 steeringResult.powerRatio = powerRatioStruct;
+steeringResult.fwhmDeg = fwhmStruct;
+steeringResult.pointingErrorDeg = pointingErrorStruct;
+steeringResult.evalCount = evalCountStruct;
+steeringResult.runtimeSec = runtimeStruct;
+steeringResult.targetIntensity = targetIntensityStruct;
 steeringResult.meta = struct("stepThetaDeg", scanCfg.stepThetaDeg, ...
     "targetRangeDeg", [scanCfg.startThetaDeg, scanCfg.endThetaDeg]);
 
@@ -134,14 +162,34 @@ if scanCfg.exportMat || scanCfg.exportCsv
         csvPath = fullfile(scanCfg.exportDir, [fileStem, '.csv']);
         T = table(scanAngles(:), ...
             smsrAll(1,:).', smsrAll(2,:).', smsrAll(3,:).', ...
-            smsrAll(4,:).', ...
+            smsrAll(4,:).', smsrAll(5,:).', smsrAll(6,:).', ...
+            fwhmAll(1,:).', fwhmAll(2,:).', fwhmAll(3,:).', ...
+            fwhmAll(4,:).', fwhmAll(5,:).', fwhmAll(6,:).', ...
+            pointingErrorAll(1,:).', pointingErrorAll(2,:).', pointingErrorAll(3,:).', ...
+            pointingErrorAll(4,:).', pointingErrorAll(5,:).', pointingErrorAll(6,:).', ...
+            evalCountAll(1,:).', evalCountAll(2,:).', evalCountAll(3,:).', ...
+            evalCountAll(4,:).', evalCountAll(5,:).', evalCountAll(6,:).', ...
+            runtimeAll(1,:).', runtimeAll(2,:).', runtimeAll(3,:).', ...
+            runtimeAll(4,:).', runtimeAll(5,:).', runtimeAll(6,:).', ...
+            targetIntensityAll(1,:).', targetIntensityAll(2,:).', targetIntensityAll(3,:).', ...
+            targetIntensityAll(4,:).', targetIntensityAll(5,:).', targetIntensityAll(6,:).', ...
             powerRatioAll(1,:).', powerRatioAll(2,:).', powerRatioAll(3,:).', ...
-            powerRatioAll(4,:).', ...
+            powerRatioAll(4,:).', powerRatioAll(5,:).', powerRatioAll(6,:).', ...
             'VariableNames', {'angleDeg', ...
             'smsr_mrev_db', 'smsr_mrevGss_db', 'smsr_pfpd_db', ...
-            'smsr_5pps_db', ...
+            'smsr_5pps_db', 'smsr_spgd_db', 'smsr_hillClimb_db', ...
+            'fwhm_mrev_deg', 'fwhm_mrevGss_deg', 'fwhm_pfpd_deg', ...
+            'fwhm_5pps_deg', 'fwhm_spgd_deg', 'fwhm_hillClimb_deg', ...
+            'pointingError_mrev_deg', 'pointingError_mrevGss_deg', 'pointingError_pfpd_deg', ...
+            'pointingError_5pps_deg', 'pointingError_spgd_deg', 'pointingError_hillClimb_deg', ...
+            'evalCount_mrev', 'evalCount_mrevGss', 'evalCount_pfpd', ...
+            'evalCount_5pps', 'evalCount_spgd', 'evalCount_hillClimb', ...
+            'runtime_mrev_sec', 'runtime_mrevGss_sec', 'runtime_pfpd_sec', ...
+            'runtime_5pps_sec', 'runtime_spgd_sec', 'runtime_hillClimb_sec', ...
+            'targetIntensity_mrev', 'targetIntensity_mrevGss', 'targetIntensity_pfpd', ...
+            'targetIntensity_5pps', 'targetIntensity_spgd', 'targetIntensity_hillClimb', ...
             'mainLobeRatio_mrev', 'mainLobeRatio_mrevGss', 'mainLobeRatio_pfpd', ...
-            'mainLobeRatio_5pps'});
+            'mainLobeRatio_5pps', 'mainLobeRatio_spgd', 'mainLobeRatio_hillClimb'});
         writetable(T, csvPath);
         exportInfo.csvPath = csvPath;
     end

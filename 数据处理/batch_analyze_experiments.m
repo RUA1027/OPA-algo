@@ -10,14 +10,17 @@ function summary = batch_analyze_experiments()
 %
 % Output:
 %   summary  MATLAB table; also saved as summary.csv in the script directory.
+%   A grouped mean table is also written to summary_stats.csv.
 
 scriptDir = fileparts(mfilename("fullpath"));
 projectRoot = fileparts(scriptDir);
 dataRoot = fullfile(projectRoot, "实验数据");
 outputPath = fullfile(scriptDir, "summary.csv");
+statsPath = fullfile(scriptDir, "summary_stats.csv");
 
-% Add experiment utilities to path
-addpath(genpath(fullfile(projectRoot, "OPA_algo")));
+% Add local metric helpers and hardware-side utilities to path.
+addpath(scriptDir);
+addpath(fullfile(projectRoot, "硬件部署实验代码"));
 
 % Recursively find all best_image.tif files
 imageFiles = dir(fullfile(dataRoot, "**", "point_*_best_image.tif"));
@@ -31,25 +34,30 @@ fprintf("Found %d point image files. Processing...\n", numel(imageFiles));
 nPoints = numel(imageFiles);
 
 % Pre-allocate cell arrays for table construction
-colWavelengthRun = cell(nPoints, 1);
-colPointLabel    = cell(nPoints, 1);
-colMethod        = cell(nPoints, 1);
-colTargetX       = zeros(nPoints, 1);
-colTargetY       = zeros(nPoints, 1);
-colEvalCount     = zeros(nPoints, 1);
-colElapsedSec    = zeros(nPoints, 1);
-colFinalIntensity = zeros(nPoints, 1);
-colBestIntensity  = zeros(nPoints, 1);
-colPhaseFwhmDeg  = zeros(nPoints, 1);
-colWlFwhmDeg     = zeros(nPoints, 1);
-colPhaseFwhmPx   = zeros(nPoints, 1);
-colWlFwhmPx      = zeros(nPoints, 1);
-colPeakXpx       = zeros(nPoints, 1);
-colPeakYpx       = zeros(nPoints, 1);
-colDevXpx        = zeros(nPoints, 1);
-colDevYpx        = zeros(nPoints, 1);
-colDevRssPx      = zeros(nPoints, 1);
-colStatus        = cell(nPoints, 1);
+colWavelengthRun = strings(nPoints, 1);
+colPointLabel    = strings(nPoints, 1);
+colMethod        = strings(nPoints, 1);
+colTargetX       = NaN(nPoints, 1);
+colTargetY       = NaN(nPoints, 1);
+colEvalCount     = NaN(nPoints, 1);
+colElapsedSec    = NaN(nPoints, 1);
+colFinalIntensity = NaN(nPoints, 1);
+colBestIntensity  = NaN(nPoints, 1);
+colPhaseFwhmDeg  = NaN(nPoints, 1);
+colWlFwhmDeg     = NaN(nPoints, 1);
+colPhaseFwhmPx   = NaN(nPoints, 1);
+colWlFwhmPx      = NaN(nPoints, 1);
+colPeakXpx       = NaN(nPoints, 1);
+colPeakYpx       = NaN(nPoints, 1);
+colPeakXdeg      = NaN(nPoints, 1);
+colPeakYdeg      = NaN(nPoints, 1);
+colDevXpx        = NaN(nPoints, 1);
+colDevYpx        = NaN(nPoints, 1);
+colDevRssPx      = NaN(nPoints, 1);
+colDevXdeg       = NaN(nPoints, 1);
+colDevYdeg       = NaN(nPoints, 1);
+colDevRssDeg     = NaN(nPoints, 1);
+colStatus        = strings(nPoints, 1);
 
 for idx = 1:nPoints
     imageFile = imageFiles(idx);
@@ -62,12 +70,12 @@ for idx = 1:nPoints
 
     % Parse wavelength run name and point label
     [wavelengthRun, pointLabel] = iParseImagePath(imageDir, imageFile.name);
-    colWavelengthRun{idx} = wavelengthRun;
-    colPointLabel{idx}    = pointLabel;
+    colWavelengthRun(idx) = wavelengthRun;
+    colPointLabel(idx)    = pointLabel;
 
     if ~isfile(resultFull)
         warning("Missing result file: %s", resultFull);
-        colStatus{idx} = "missing_result_mat";
+        colStatus(idx) = "missing_result_mat";
         continue;
     end
 
@@ -75,14 +83,14 @@ for idx = 1:nPoints
         loaded = load(resultFull);
     catch
         warning("Failed to load: %s", resultFull);
-        colStatus{idx} = "load_error";
+        colStatus(idx) = "load_error";
         continue;
     end
 
     % Extract fields from result.mat
     [methodStr, targetX, targetY, evalCount, elapsedSec, finalIntensity] = ...
         iExtractPointFields(loaded);
-    colMethod{idx}    = methodStr;
+    colMethod(idx)    = methodStr;
     colTargetX(idx)   = targetX;
     colTargetY(idx)   = targetY;
     colEvalCount(idx) = evalCount;
@@ -92,14 +100,14 @@ for idx = 1:nPoints
     % Read best_image
     if ~isfile(imageFull)
         warning("Missing image file: %s", imageFull);
-        colStatus{idx} = "missing_image";
+        colStatus(idx) = "missing_image";
         continue;
     end
     try
         image = imread(imageFull);
     catch
         warning("Failed to read image: %s", imageFull);
-        colStatus{idx} = "image_read_error";
+        colStatus(idx) = "image_read_error";
         continue;
     end
 
@@ -110,7 +118,7 @@ for idx = 1:nPoints
         m = compute_spot_metrics(image, targetX, targetY);
     catch ME
         warning("Spot metrics failed for %s: %s", pointLabel, ME.message);
-        colStatus{idx} = "metrics_error";
+        colStatus(idx) = "metrics_error";
         continue;
     end
 
@@ -120,11 +128,16 @@ for idx = 1:nPoints
     colWlFwhmPx(idx)     = m.wl_FWHM_px;
     colPeakXpx(idx)      = m.peak_x_px;
     colPeakYpx(idx)      = m.peak_y_px;
+    colPeakXdeg(idx)     = m.peak_x_deg;
+    colPeakYdeg(idx)     = m.peak_y_deg;
     colDevXpx(idx)       = m.deviation_x_px;
     colDevYpx(idx)       = m.deviation_y_px;
     colDevRssPx(idx)     = m.deviation_rss_px;
+    colDevXdeg(idx)      = m.deviation_x_deg;
+    colDevYdeg(idx)      = m.deviation_y_deg;
+    colDevRssDeg(idx)    = m.deviation_rss_deg;
 
-    colStatus{idx} = "ok";
+    colStatus(idx) = "ok";
 
     if mod(idx, 10) == 0
         fprintf("  %d/%d processed\n", idx, nPoints);
@@ -138,25 +151,68 @@ summary = table( ...
     colTargetX, colTargetY, ...
     colEvalCount, colElapsedSec, colFinalIntensity, colBestIntensity, ...
     colPhaseFwhmDeg, colWlFwhmDeg, colPhaseFwhmPx, colWlFwhmPx, ...
-    colPeakXpx, colPeakYpx, ...
-    colDevXpx, colDevYpx, colDevRssPx, ...
+    colPeakXpx, colPeakYpx, colPeakXdeg, colPeakYdeg, ...
+    colDevXpx, colDevYpx, colDevRssPx, colDevXdeg, colDevYdeg, colDevRssDeg, ...
     colStatus, ...
     'VariableNames', { ...
     'wavelength_run', 'point_label', 'method', ...
     'target_x_px', 'target_y_px', ...
     'eval_count', 'elapsed_sec', 'final_intensity', 'best_intensity', ...
     'phase_FWHM_deg', 'wl_FWHM_deg', 'phase_FWHM_px', 'wl_FWHM_px', ...
-    'peak_x_px', 'peak_y_px', ...
+    'peak_x_px', 'peak_y_px', 'peak_x_deg', 'peak_y_deg', ...
     'deviation_x_px', 'deviation_y_px', 'deviation_rss_px', ...
+    'deviation_x_deg', 'deviation_y_deg', 'deviation_rss_deg', ...
     'status'});
 
 writetable(summary, outputPath);
 fprintf("Summary written to: %s\n", outputPath);
+stats = iBuildGroupedStats(summary);
+writetable(stats, statsPath);
+fprintf("Grouped stats written to: %s\n", statsPath);
 
 % Quick stats — use cellfun for robust status check
-okMask = false(nPoints, 1);
-for k = 1:nPoints
-    okMask(k) = strcmp(colStatus{k}, "ok");
+okMask = colStatus == "ok";
+
+function stats = iBuildGroupedStats(summary)
+ok = summary.status == "ok";
+if ~any(ok)
+    stats = table();
+    return;
+end
+
+okSummary = summary(ok, :);
+methods = unique(okSummary.method);
+n = numel(methods);
+
+pointCount = zeros(n, 1);
+meanEval = NaN(n, 1);
+meanElapsed = NaN(n, 1);
+meanFinal = NaN(n, 1);
+meanBest = NaN(n, 1);
+meanDevPx = NaN(n, 1);
+meanDevDeg = NaN(n, 1);
+meanPhaseFwhm = NaN(n, 1);
+meanWlFwhm = NaN(n, 1);
+
+for idx = 1:n
+    mask = okSummary.method == methods(idx);
+    pointCount(idx) = sum(mask);
+    meanEval(idx) = mean(okSummary.eval_count(mask), "omitnan");
+    meanElapsed(idx) = mean(okSummary.elapsed_sec(mask), "omitnan");
+    meanFinal(idx) = mean(okSummary.final_intensity(mask), "omitnan");
+    meanBest(idx) = mean(okSummary.best_intensity(mask), "omitnan");
+    meanDevPx(idx) = mean(okSummary.deviation_rss_px(mask), "omitnan");
+    meanDevDeg(idx) = mean(okSummary.deviation_rss_deg(mask), "omitnan");
+    meanPhaseFwhm(idx) = mean(okSummary.phase_FWHM_deg(mask), "omitnan");
+    meanWlFwhm(idx) = mean(okSummary.wl_FWHM_deg(mask), "omitnan");
+end
+
+stats = table(methods, pointCount, meanEval, meanElapsed, meanFinal, meanBest, ...
+    meanDevPx, meanDevDeg, meanPhaseFwhm, meanWlFwhm, ...
+    'VariableNames', {'method', 'point_count', 'mean_eval_count', ...
+    'mean_elapsed_sec', 'mean_final_intensity', 'mean_best_intensity', ...
+    'mean_target_deviation_px', 'mean_target_deviation_deg', ...
+    'mean_phase_FWHM_deg', 'mean_wl_FWHM_deg'});
 end
 nOk = sum(okMask);
 fprintf("\n=== Quick Summary ===\n");

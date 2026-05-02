@@ -65,6 +65,7 @@ for pointIdx = 1:height(targets)
     cfgPoint = cfgLoop;
     cfgPoint.method = string(method);
     cfgPoint.measure.ccdCenterCol = target.x_pixel;
+    cfgPoint.measure.ccdTargetRow = target.y_pixel;
 
     try
         result = exp_run_calibration(cfgPoint);
@@ -195,6 +196,36 @@ end
 if isfield(result, "bestBeamPositionDeg") && ~isempty(result.bestBeamPositionDeg)
     summary.bestBeamPositionDeg = double(result.bestBeamPositionDeg);
 end
+if isfield(result, "bestPeakXPixel") && ~isempty(result.bestPeakXPixel)
+    summary.bestPeakXPixel = double(result.bestPeakXPixel);
+end
+if isfield(result, "bestPeakYPixel") && ~isempty(result.bestPeakYPixel)
+    summary.bestPeakYPixel = double(result.bestPeakYPixel);
+end
+if isfield(result, "bestPeakXDeg") && ~isempty(result.bestPeakXDeg)
+    summary.bestPeakXDeg = double(result.bestPeakXDeg);
+end
+if isfield(result, "bestPeakYDeg") && ~isempty(result.bestPeakYDeg)
+    summary.bestPeakYDeg = double(result.bestPeakYDeg);
+end
+if isfield(result, "bestTargetDeviationXPixel") && ~isempty(result.bestTargetDeviationXPixel)
+    summary.bestTargetDeviationXPixel = double(result.bestTargetDeviationXPixel);
+end
+if isfield(result, "bestTargetDeviationYPixel") && ~isempty(result.bestTargetDeviationYPixel)
+    summary.bestTargetDeviationYPixel = double(result.bestTargetDeviationYPixel);
+end
+if isfield(result, "bestTargetDeviationRssPixel") && ~isempty(result.bestTargetDeviationRssPixel)
+    summary.bestTargetDeviationRssPixel = double(result.bestTargetDeviationRssPixel);
+end
+if isfield(result, "bestTargetDeviationXDeg") && ~isempty(result.bestTargetDeviationXDeg)
+    summary.bestTargetDeviationXDeg = double(result.bestTargetDeviationXDeg);
+end
+if isfield(result, "bestTargetDeviationYDeg") && ~isempty(result.bestTargetDeviationYDeg)
+    summary.bestTargetDeviationYDeg = double(result.bestTargetDeviationYDeg);
+end
+if isfield(result, "bestTargetDeviationRssDeg") && ~isempty(result.bestTargetDeviationRssDeg)
+    summary.bestTargetDeviationRssDeg = double(result.bestTargetDeviationRssDeg);
+end
 end
 
 function summary = iEmptyResultSummary()
@@ -206,6 +237,16 @@ summary.bestIntensity = NaN;
 summary.bestPhaseFwhmDeg = NaN;
 summary.bestWlFwhmDeg = NaN;
 summary.bestBeamPositionDeg = NaN;
+summary.bestPeakXPixel = NaN;
+summary.bestPeakYPixel = NaN;
+summary.bestPeakXDeg = NaN;
+summary.bestPeakYDeg = NaN;
+summary.bestTargetDeviationXPixel = NaN;
+summary.bestTargetDeviationYPixel = NaN;
+summary.bestTargetDeviationRssPixel = NaN;
+summary.bestTargetDeviationXDeg = NaN;
+summary.bestTargetDeviationYDeg = NaN;
+summary.bestTargetDeviationRssDeg = NaN;
 end
 
 function record = iManifestRecordTemplate()
@@ -227,6 +268,16 @@ record.final_intensity = NaN;
 record.best_phase_fwhm_deg = NaN;
 record.best_wl_fwhm_deg = NaN;
 record.best_beam_position_deg = NaN;
+record.best_peak_x_px = NaN;
+record.best_peak_y_px = NaN;
+record.best_peak_x_deg = NaN;
+record.best_peak_y_deg = NaN;
+record.target_deviation_x_px = NaN;
+record.target_deviation_y_px = NaN;
+record.target_deviation_rss_px = NaN;
+record.target_deviation_x_deg = NaN;
+record.target_deviation_y_deg = NaN;
+record.target_deviation_rss_deg = NaN;
 record.eval_count = NaN;
 record.elapsed_sec = NaN;
 record.status = "";
@@ -255,6 +306,16 @@ record.elapsed_sec = resultSummary.elapsedSec;
 record.best_phase_fwhm_deg = resultSummary.bestPhaseFwhmDeg;
 record.best_wl_fwhm_deg = resultSummary.bestWlFwhmDeg;
 record.best_beam_position_deg = resultSummary.bestBeamPositionDeg;
+record.best_peak_x_px = resultSummary.bestPeakXPixel;
+record.best_peak_y_px = resultSummary.bestPeakYPixel;
+record.best_peak_x_deg = resultSummary.bestPeakXDeg;
+record.best_peak_y_deg = resultSummary.bestPeakYDeg;
+record.target_deviation_x_px = resultSummary.bestTargetDeviationXPixel;
+record.target_deviation_y_px = resultSummary.bestTargetDeviationYPixel;
+record.target_deviation_rss_px = resultSummary.bestTargetDeviationRssPixel;
+record.target_deviation_x_deg = resultSummary.bestTargetDeviationXDeg;
+record.target_deviation_y_deg = resultSummary.bestTargetDeviationYDeg;
+record.target_deviation_rss_deg = resultSummary.bestTargetDeviationRssDeg;
 record.status = string(status);
 record.error_message = string(errorMessage);
 end

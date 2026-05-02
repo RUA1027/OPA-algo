@@ -85,6 +85,8 @@ result.roundMaxTerminalGap = roundMaxTerminalGap;
 result.roundEvalCount = roundEvalCount;
 result.roundAccepted = roundAccepted;
 
+result = attachSimulationMetrics(result, state);
+
 end
 
 function [uOpt, evalCount, terminalGap] = iGoldenSearchByChannel(controlU, channelIdx, uMin, uMax, L, gapTol, measureFn)

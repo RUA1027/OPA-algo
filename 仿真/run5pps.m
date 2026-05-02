@@ -77,6 +77,8 @@ result.roundTargetIntensityTrue = roundTargetIntensityTrue;
 result.roundEvalCount           = roundEvalCount;
 result.roundAccepted            = roundAccepted;
 
+result = attachSimulationMetrics(result, state);
+
 end
 
 %% ---- internal: five-step phase stepping for one channel ----

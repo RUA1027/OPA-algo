@@ -1,0 +1,198 @@
+代码审核与指标补齐报告
+生成日期：2026-05-02
+工作目录：D:\HuaweiMoveData\Users\HUAWEI\Desktop\光电设计竞赛\algo
+
+一、审核范围
+
+本轮审核覆盖两个模块：
+
+1. 硬件部署实验代码模块：
+硬件部署实验代码\func_extract_FWHM.m
+硬件部署实验代码\func_locate_peak.m
+硬件部署实验代码\func_locate_wl_position.m
+硬件部署实验代码\exp_update_realtime_display.m
+硬件部署实验代码\exp_init_realtime_display.m
+硬件部署实验代码\exp_run_calibration.m
+硬件部署实验代码\exp_run_5pps.m
+硬件部署实验代码\exp_run_mrev.m
+硬件部署实验代码\exp_run_mrevgss.m
+硬件部署实验代码\exp_run_pfpd.m
+硬件部署实验代码\exp_run_wavelength_calibration.m
+数据处理\compute_spot_metrics.m
+数据处理\batch_analyze_experiments.m
+
+2. 仿真模块：
+仿真\defaultConfig.m
+仿真\computeMetrics.m
+仿真\attachSimulationMetrics.m
+仿真\main_compare_calibration.m
+仿真\main_beam_steering.m
+仿真\runSpgd.m
+仿真\runHillClimb.m
+仿真\run5pps.m
+仿真\runMrev.m
+仿真\runMrevGss.m
+仿真\runPfpd.m
+
+二、硬件实验代码审核结论
+
+1. 从图像提取相位方向和波长方向 FWHM：
+原代码已经有 func_extract_FWHM.m，并且 exp_update_realtime_display.m 会在最佳图像刷新时调用它。但是原实现使用简单阈值扫描，遇到半高位置落在像素之间、边界未跌破半高、噪声或平台峰时容易得到不稳定宽度。
+
+本轮已修复：
+func_extract_FWHM.m 改为基于峰值所在行/列的一维剖面，使用半高位置线性插值计算 FWHM。若图像为空、全非有限值或峰值无效，返回 NaN，而不是给出错误宽度。
+
+2. 从图像定位峰值位置：
+原代码已经有 func_locate_peak.m，但采用双层循环并在多个最大值时返回最后一个最大点。
+
+本轮已修复：
+func_locate_peak.m 改为直接使用 max(image(:)) 和 ind2sub 定位峰值，记录 x_pixel、y_pixel、x_deg、y_deg、intensity。func_locate_wl_position.m 复用 func_locate_peak，避免两套峰值定位逻辑不一致。
+
+3. 峰值位置偏差 / 目标点偏差 + phase 方向 FWHM + wl 方向 FWHM：
+原代码只把 bestPhaseFwhmDeg、bestWlFwhmDeg、bestBeamPositionDeg 写入部分算法结果，bestBeamPositionDeg 只代表波长方向位置，不是二维峰值，也没有目标点偏差。
+
+本轮已补齐：
+exp_update_realtime_display.m 在最佳图像刷新时记录二维峰值位置、二维角度位置、目标点像素偏差、目标点角度偏差和 RSS 偏差。
+exp_init_realtime_display.m 增加 targetXPixel、targetYPixel、bestPeak、bestTargetDeviation 等字段。
+exp_run_calibration.m 将 cfg.measure.ccdCenterCol 和 cfg.measure.ccdTargetRow 传入实时显示配置。
+exp_run_wavelength_calibration.m 在每个目标点运行时设置 cfgPoint.measure.ccdTargetRow = target.y_pixel，因此 target x/y 都进入评价链路。
+新增 exp_attach_display_metrics.m，统一把实时显示得到的图像指标写回 result，避免 5PPS、mREV、mREV-GSS、PFPD 四个实验 runner 字段不一致。
+
+4. 自动化统计脚本：
+原数据处理目录已有 batch_analyze_experiments.m 和 compute_spot_metrics.m，可批量扫描 best_image.tif 和 result.mat，输出 summary.csv。但原脚本没有输出按算法分组均值表，失败行默认值用 0，容易和真实值混淆；FWHM 算法也继承了旧的简单阈值逻辑。
+
+本轮已补齐：
+compute_spot_metrics.m 使用与硬件侧一致的插值 FWHM 和峰值定位逻辑。
+batch_analyze_experiments.m 将缺失值初始化为 NaN，输出新增字段 peak_x_deg、peak_y_deg、deviation_x_deg、deviation_y_deg、deviation_rss_deg。
+batch_analyze_experiments.m 继续生成 数据处理\summary.csv，并新增 数据处理\summary_stats.csv，记录每种算法的平均 evalCount、平均耗时、平均最终 FOM、平均最佳强度、平均目标偏差、平均 phase-FWHM、平均 wl-FWHM。
+
+三、真实实验数据批量统计结果
+
+本轮已用 MATLAB 对真实实验数据重新跑通 batch_analyze_experiments.m。
+
+输出文件：
+数据处理\summary.csv
+数据处理\summary_stats.csv
+
+处理结果：
+总点数：56
+成功处理点数：56
+失败点数：0
+
+总体均值：
+平均 eval_count：3121
+平均 elapsed_sec：413.65 s
+平均 final_intensity：550192.2
+平均 target deviation RSS：3.54 px
+平均 phase_FWHM：4.29 px
+平均 wl_FWHM：4.69 px
+
+按算法分组：
+5pps：
+点数 55
+平均 eval_count 1792.9818
+平均 elapsed_sec 310.8079 s
+平均 final_intensity 548558.8
+平均 best_intensity 8611.5091
+平均 target deviation 3.5729 px / 0.1536 deg
+平均 phase_FWHM 0.1843 deg
+平均 wl_FWHM 0.1998 deg
+
+mREV：
+点数 1
+eval_count 76159
+elapsed_sec 6070.1225 s
+final_intensity 640031
+best_intensity 11227
+target deviation 2 px / 0.086 deg
+phase_FWHM 0.174 deg
+wl_FWHM 0.308 deg
+
+说明：
+当前 mREV 只有单点结果，不适合直接与 5PPS 的 55 个点做统计显著性比较。单点对比可以说明 mREV 的光强略高但耗时和采样次数极大；多点统计主要证明 5PPS 在图案采点任务中的稳定完成能力和效率。
+
+四、结果测评环节指标落地情况
+
+1. 已经在结果中存在且代码明确实现的指标：
+收敛速度/迭代次数：evalCount、roundEvalCount、roundTargetIntensityTrue。
+总耗时：硬件侧 calibrationElapsedSec / manifest elapsed_sec；仿真侧 runtimeSec。
+最终 FOM：硬件侧 finalIntensityMeasured / final_intensity；仿真侧 targetIntensity。
+最佳强度：硬件侧 best_image 的峰值 / best_intensity；仿真侧 mainPeak。
+FWHM / 光束发散角：硬件侧 phase_FWHM、wl_FWHM；仿真侧 fwhmDeg / beamwidth3dBDeg / beamDivergenceDeg。
+几何对准精度：硬件侧 peak_x/y 与 target_x/y 的 deviation；仿真侧 pointingErrorDeg / pointingErrorAbsDeg。
+副瓣抑制或主副瓣对比：仿真侧 smsrDb、slsrDb、mainSideContrastDb。硬件 CCD 近场图像不是远场角谱，当前不能直接从现有硬件图像严谨计算 SLSR/SMSR。
+
+2. 需要测量过程中同步获得的指标：
+evalCount、roundEvalCount、calibrationElapsedSec、runtimeSec、测量 FOM 曲线、最终测量值、最佳控制电压、最佳 CCD 图像。这些指标必须在优化运行时记录，否则事后无法完全恢复。
+
+3. 可以测量结束后离线分析得到的指标：
+从 best_image.tif 或 best_image 矩阵得到的二维峰值、phase/wl FWHM、目标偏差、图案拼接质量统计。只要图像和目标坐标保存完整，这些可以离线批量重算。
+
+4. 硬件侧暂不应直接声称已实现的指标：
+SLSR/SMSR 或主副瓣对比度。当前硬件实验保存的是 CCD 图像和积分强度，缺少严格远场角谱或足够定义主副瓣区域的光学标定链路。若论文需要硬件 SLSR/SMSR，建议增加远场角度映射标定或在采集端保存可用于旁瓣分析的完整远场图像，并明确主瓣/副瓣分割方法。
+
+五、仿真模块补齐情况
+
+1. 新增传统 SPGD 与 HC：
+仿真\runSpgd.m 已作为 SPGD 基线接入 main_compare_calibration.m。
+仿真\runHillClimb.m 已作为 HC / Hill-Climb 基线接入 main_compare_calibration.m。
+main_compare_calibration.m 现在统一运行 mREV、mREV-GSS、PFPD、5PPS、SPGD、Hill-Climb 六个算法。
+main_beam_steering.m 也已同步扩展到六个算法。
+
+2. 指标链路补齐：
+computeMetrics.m 已输出：
+smsrDb
+slsrDb
+mainSideContrastDb
+beamwidth3dBDeg
+fwhmDeg
+beamDivergenceDeg
+mainPeak
+sidePeak
+mainPeakThetaDeg
+targetThetaDeg
+pointingErrorDeg
+pointingErrorAbsDeg
+targetIntensity
+targetIntensityNorm
+mainLobePowerRatio
+
+3. FWHM 和峰值位置保存：
+attachSimulationMetrics.m 会将远场 field、intensity、targetIntensity 和 metrics 写入每个算法 result。
+main_compare_calibration.m 会把完整 compareResult 保存为 compare_result.mat，并输出 algorithm_summary.csv、round_history.csv、far_field_intensity.csv 和图像。
+
+4. 物理建模简化：
+defaultConfig.m 当前默认保留两项核心建模：
+随机初始相位误差：initSimulationState.m 中 intrinsicPhaseRad = 2*pi*rand(...)。
+测量噪声：makeMeasureFunction.m 中对目标强度添加相对高斯噪声，cfg.measurement.relativeNoiseStd 可调。
+
+以下扰动默认关闭，仅保留配置入口用于消融：
+阵元振幅不均匀性：cfg.sim.enableAmpNonuniformity = false。
+DAC 量化与驱动噪声：cfg.sim.dac.enable = false，driverNoiseStd = 0。
+热串扰：cfg.sim.crossTalkRatio = 0。
+光学耦合串扰：cfg.sim.opticalCrosstalk.enable = false。
+测量 ADC 量化：cfg.measurement.enableQuantization = false。
+
+六、验证结果与限制
+
+已完成验证：
+1. git diff --check 通过，仅有 Windows 换行提示。
+2. 关键文件静态标记检查通过，确认新增指标、输出文件名、SPGD/HC 接口标记存在。
+3. MATLAB 启动在沙盒外验证成功。
+4. MATLAB 批量实验数据统计已跑通：
+   56/56 点处理成功。
+   summary.csv 和 summary_stats.csv 均已生成。
+
+未完成验证：
+仿真烟测需要再次沙盒外运行 MATLAB。第二次沙盒外执行请求被系统额度限制拒绝，因此本轮未能完成 main_compare_calibration 的实际 MATLAB 仿真运行。此前在沙盒内并发启动 MATLAB 时出现 File system inconsistency，已确认不是代码报错，而是执行环境启动问题。
+
+七、当前可用于论文或答辩的严谨表述
+
+可以表述：
+本项目已形成从优化过程记录到离线图像评价的完整指标链路。硬件实验侧已记录 evalCount、耗时、最终 FOM、最佳强度，并可从最佳 CCD 图像中自动提取二维峰值、phase/wl 方向 FWHM 与目标偏差。仿真侧已将 mREV、mREV-GSS、PFPD、5PPS、SPGD、HC 统一纳入同一接口，并在每个算法结果中保存收敛、耗时、采样次数、SMSR/SLSR、FWHM、指向误差等指标。
+
+需要谨慎表述：
+硬件实验侧当前不应直接声称已经实现严格 SLSR/SMSR，因为该指标依赖远场角谱和主副瓣定义。现有硬件 CCD 图像更适合支撑光斑宽度、峰值定位和图案目标偏差评价。
+
+建议下一步：
+在 MATLAB 环境恢复可运行后，执行一次缩小参数仿真烟测，再执行完整配置仿真。建议先使用 8 或 16 通道、1 轮、关闭显示窗口的配置确认保存链路，然后再运行 128 通道完整对比。
